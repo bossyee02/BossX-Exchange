@@ -799,6 +799,55 @@
             padding: 0.5rem;
             border-bottom: 1px solid rgba(55, 65, 81, 0.5);
         }
+        /* Border Lines Gold Variant */
+        .border-line-gold {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, #f59e0b, #d97706, #f59e0b, transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .stat-card:hover .border-line-gold,
+        .log-engine:hover .border-line-gold,
+        .info-system:hover .border-line-gold {  /* Tambah selector untuk elemen baru */
+            opacity: 1;
+        }
+        .border-top-gold {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #f59e0b, #d97706, #f59e0b, transparent);
+            animation: borderTop 3s linear infinite;
+            transform-origin: left;
+        }
+        .border-right-gold {
+            top: 0;
+            right: 0;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, transparent, #f59e0b, #d97706, #f59e0b, transparent);
+            animation: borderRight 3s linear infinite 0.7s;
+            transform-origin: top;
+        }
+        .border-bottom-gold {
+            bottom: 0;
+            right: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(270deg, transparent, #f59e0b, #d97706, #f59e0b, transparent);
+            animation: borderBottom 3s linear infinite 1.4s;
+            transform-origin: right;
+        }
+        .border-left-gold {
+            bottom: 0;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(0deg, transparent, #f59e0b, #d97706, #f59e0b, transparent);
+            animation: borderLeft 3s linear infinite 2.1s;
+            transform-origin: bottom;
+        }
     </style>
 </head>
 <body>
@@ -1057,7 +1106,12 @@
                             </div>
                         </div>
                         <!-- Log Engine Masternode -->
-                        <div id="log-engine" class="bg-gray-900 border border-amber-500/20 rounded-xl p-4 mt-6">
+                        <div id="log-engine" class="bg-gray-900 border border-amber-500/20 rounded-xl p-4 mt-6 relative overflow-hidden log-engine">
+                            <!-- Border Lines Gold -->
+                            <div class="border-line-gold border-top-gold"></div>
+                            <div class="border-line-gold border-right-gold"></div>
+                            <div class="border-line-gold border-bottom-gold"></div>
+                            <div class="border-line-gold border-left-gold"></div>
                             <div class="flex justify-between items-center mb-3">
                                 <h3 class="text-lg font-semibold text-amber-400">Log Engine Masternode</h3>
                                 <button id="clear-log" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors">
@@ -1067,7 +1121,12 @@
                             <div id="log-output" class="bg-black p-4 rounded-lg overflow-y-auto h-64 text-sm font-mono whitespace-pre-wrap space-y-1"></div> <!-- Ganti pre ke div untuk style per entry -->
                         </div>
                         <!-- System Status Information -->
-                        <div class="bg-gray-900 border border-blue-500/20 rounded-xl p-4 mt-6">
+                        <div class="bg-gray-900 border border-blue-500/20 rounded-xl p-4 mt-6 relative overflow-hidden info-system">
+                            <!-- Border Lines Gold -->
+                            <div class="border-line-gold border-top-gold"></div>
+                            <div class="border-line-gold border-right-gold"></div>
+                            <div class="border-line-gold border-bottom-gold"></div>
+                            <div class="border-line-gold border-left-gold"></div>
                             <div class="flex items-center mb-3">
                                 <i data-lucide="info" class="w-5 h-5 text-blue-400 mr-2"></i>
                                 <h3 class="text-lg font-semibold text-blue-400">Informasi Sistem BossX Validator</h3>
