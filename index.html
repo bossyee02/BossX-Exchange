@@ -894,6 +894,11 @@
                     <i data-lucide="message-circle" class="w-4 h-4"></i>
                     <span class="ml-2 font-medium menu-text text-sm">Chat Room</span>
                 </a>
+                <!-- Fitur baru: Referral, ditambahkan tepat di bawah Chat Room -->
+                <a href="#" class="menu-item flex items-center px-2 py-2 mb-2 rounded-xl text-gray-400" data-page="referral">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span class="ml-2 font-medium menu-text text-sm">Referral</span>
+                </a>
                 <!-- END MENU BARU -->
                 <a href="#" class="menu-item flex items-center px-2 py-2 mb-2 rounded-xl text-gray-400" data-page="faq">
                     <i data-lucide="help-circle" class="w-4 h-4"></i>
@@ -1553,6 +1558,36 @@
                         <div id="chat-room-container" class="w-full h-full"></div>
                     </div>
                     <!-- END HALAMAN BARU -->
+                    <!-- Referral Page (Fitur baru) -->
+                    <div id="referral-page" class="page-content">
+                        <div class="p-6">
+                            <h1 class="text-2xl font-bold text-amber-400 mb-4">Referral</h1>
+                            <div class="stat-card p-6 mb-6">
+                                <h3 class="text-xl font-bold text-white mb-4">Kode Referral Anda</h3>
+                                <div class="flex items-center space-x-2 mb-4">
+                                    <input id="referral-code" type="text" class="node-input flex-1" readonly value="REF-XXXXXX" />
+                                    <button onclick="copyReferralCode()" class="copy-button flex items-center px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-black rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition-all duration-300 transform hover:scale-105">
+                                        <i data-lucide="copy" class="mr-1 w-4 h-4"></i> Copy
+                                    </button>
+                                </div>
+                                <button onclick="generateReferralCode()" class="node-button mb-4">Generate Kode Baru</button>
+                                <p class="text-gray-400">Bagikan kode referral Anda untuk mendapatkan reward. Setiap referral sukses memberikan 10% bonus dari deposit pertama mereka.</p>
+                            </div>
+                            <div class="stat-card p-6">
+                                <h3 class="text-xl font-bold text-white mb-4">Statistik Referral</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-gray-400">Total Referral</p>
+                                        <p class="text-2xl font-bold text-white">0</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400">Reward Didapat</p>
+                                        <p class="text-2xl font-bold text-white">0 BossX</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <!-- P2P Page -->
                     <div id="p2p-page" class="page-content exchange-bg">
                         <div class="exchange-card p-6 mb-6">
@@ -1957,8 +1992,9 @@
             currentPage = pageId;
             if (pageId === 'deposit') updateDepositContent();
             else if (pageId === 'withdrawal') updateWithdrawalContent();
-            else if (pageId === 'p2p') updateP2PContent();
-            else if (pageId === 'exchange') {
+            else if (pageId === 'p2p') {
+                updateP2PContent();
+            } else if (pageId === 'exchange') {
                 // Init exchange page if needed
                 initExchangePage();
             } else if (pageId === 'chat-room') {
@@ -2855,6 +2891,16 @@
             const totalReceived = p2pHistory.filter(t => t.type === 'in').reduce((sum, t) => sum + t.amount, 0);
             document.getElementById('p2p-total-sent').textContent = formatAmount(totalSent) + ' BossX';
             document.getElementById('p2p-total-received').textContent = formatAmount(totalReceived) + ' BossX';
+        }
+        // Referral Functions (Fitur baru)
+        function generateReferralCode() {
+            const code = 'REF-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('referral-code').value = code;
+            showSuccessMessage('Kode referral baru berhasil digenerate!');
+        }
+        function copyReferralCode() {
+            const code = document.getElementById('referral-code').value;
+            copyToClipboard(code);
         }
         // Event Listeners
         document.addEventListener('DOMContentLoaded', function() {
