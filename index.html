@@ -923,6 +923,13 @@
             background: #f0b90b !important; /* Binance yellow */
             color: #000 !important;
         }
+        /* Additional for spread */
+        #spread {
+            text-align: center;
+            margin: 10px 0;
+            font-size: 18px;
+            color: #ff6b6b;
+        }
     </style>
 </head>
 <body>
@@ -1546,7 +1553,7 @@
                                                 <ul class="text-sm text-gray-300 space-y-1">
                                                     <li id="withdrawal-min">• Minimal withdrawal: 10 USDT</li>
                                                     <li id="withdrawal-fee">• Fee withdrawal: 1 USDT</li>
-                                                    <li>• Periksa kembali alamat tujuan sebelum konfirmasi</li>
+                                                    <li>• Periksa kembali alamat alamat tujuan sebelum konfirmasi</li>
                                                     <li>• Proses withdrawal membutuhkan waktu 1-24 jam</li>
                                                 </ul>
                                             </div>
@@ -1887,6 +1894,7 @@
                                     Order Book
                                 </h2>
                                 <div class="order-book-section h-64 overflow-y-auto mb-4">
+                                    <h3>Sell Orders</h3>
                                     <table class="w-full order-book">
                                         <thead>
                                             <tr>
@@ -1896,6 +1904,17 @@
                                             </tr>
                                         </thead>
                                         <tbody id="sell-orders" class="sell-order"></tbody>
+                                    </table>
+                                    <div id="spread">Spread: Loading...</div>
+                                    <h3>Buy Orders</h3>
+                                    <table class="w-full order-book">
+                                        <thead>
+                                            <tr>
+                                                <th>Price(USDT)</th>
+                                                <th>Amount</th>
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
                                         <tbody id="buy-orders" class="buy-order"></tbody>
                                     </table>
                                 </div>
@@ -2093,7 +2112,7 @@
                 // Initialize Chat Room when navigating to it
                 setTimeout(() => initializeChatRoom(), 100);
             } else if (pageId === 'team-developer') {
-                // No additional init needed for team page
+                // No additional init needed
             }
             if (pageId !== 'exchange') {
                 // Close WebSocket if leaving exchange page
@@ -3110,17 +3129,22 @@
             // Refresh every 5 seconds
             setTimeout(() => fetchOrderBook(symbol), 5000);
         }
+        let asks = []; // For spread calculation
+        let bids = []; // For spread calculation
         function updateOrderBook(data) {
+            // Update global asks and bids for spread
+            asks = data.a || data.asks;
+            bids = data.b || data.bids;
             // Enhanced with depth bars
-            const maxVolume = Math.max(...data.asks.map(a => a[1]), ...data.bids.map(b => b[1]));
-            // Sells (asks) on top, reversed
+            const maxVolume = Math.max(...asks.map(a => parseFloat(a[1])), ...bids.map(b => parseFloat(b[1])));
+            // Sells (asks) on top, highest price first (reverse asks since they are low to high)
             const sellOrders = document.getElementById('sell-orders');
             sellOrders.innerHTML = '';
-            data.asks.slice(0, 20).reverse().forEach(ask => {
+            asks.slice(0, 20).reverse().forEach(ask => {
                 const price = parseFloat(ask[0]).toFixed(2);
-                const amount = parseFloat(ask[1]).toFixed(4);
-                const total = (price * amount).toFixed(2);
-                const width = (amount / maxVolume * 100) + '%';
+                const amount = parseFloat(ask[1]).toFixed(6);
+                const total = (parseFloat(ask[0]) * parseFloat(ask[1])).toFixed(2);
+                const width = (parseFloat(ask[1]) / maxVolume * 100) + '%';
                 const row = document.createElement('tr');
                 row.className = 'relative';
                 row.innerHTML = `
@@ -3131,14 +3155,14 @@
                 `;
                 sellOrders.appendChild(row);
             });
-            // Buys (bids) below
+            // Buys (bids) below, highest first (bids are high to low)
             const buyOrders = document.getElementById('buy-orders');
             buyOrders.innerHTML = '';
-            data.bids.slice(0, 20).forEach(bid => {
+            bids.slice(0, 20).forEach(bid => {
                 const price = parseFloat(bid[0]).toFixed(2);
-                const amount = parseFloat(bid[1]).toFixed(4);
-                const total = (price * amount).toFixed(2);
-                const width = (amount / maxVolume * 100) + '%';
+                const amount = parseFloat(bid[1]).toFixed(6);
+                const total = (parseFloat(bid[0]) * parseFloat(bid[1])).toFixed(2);
+                const width = (parseFloat(bid[1]) / maxVolume * 100) + '%';
                 const row = document.createElement('tr');
                 row.className = 'relative';
                 row.innerHTML = `
@@ -3149,38 +3173,47 @@
                 `;
                 buyOrders.appendChild(row);
             });
+            // Update spread
+            if (asks.length > 0 && bids.length > 0) {
+                const bestBid = parseFloat(bids[0][0]);
+                const bestAsk = parseFloat(asks[0][0]);
+                const spreadValue = (bestAsk - bestBid).toFixed(2);
+                const spreadPercent = ((bestAsk - bestBid) / bestBid * 100).toFixed(2);
+                document.getElementById('spread').textContent = `Spread: ${spreadValue} (${spreadPercent}%)`;
+            } else {
+                document.getElementById('spread').textContent = 'Spread: Loading...';
+            }
         }
         function generateDummyOrderBook() {
             const sellOrders = document.getElementById('sell-orders');
             sellOrders.innerHTML = '';
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 20; i++) {
                 const price = (0.001 + i * 0.00001).toFixed(6);
                 const amount = (Math.random() * 100 + 1).toFixed(4);
                 const total = (parseFloat(price) * parseFloat(amount)).toFixed(6);
-                const row = document.createElement('div');
-                row.className = 'order-book-item order-book-sell';
+                const row = document.createElement('tr');
                 row.innerHTML = `
-                    <span>${price}</span>
-                    <span>${amount}</span>
-                    <span class="order-book-total">${total}</span>
+                    <td class="sell-order">${price}</td>
+                    <td>${amount}</td>
+                    <td>${total}</td>
                 `;
                 sellOrders.appendChild(row);
             }
             const buyOrders = document.getElementById('buy-orders');
             buyOrders.innerHTML = '';
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 20; i++) {
                 const price = (0.001 - i * 0.00001).toFixed(6);
                 const amount = (Math.random() * 100 + 1).toFixed(4);
                 const total = (parseFloat(price) * parseFloat(amount)).toFixed(6);
-                const row = document.createElement('div');
-                row.className = 'order-book-item order-book-buy';
+                const row = document.createElement('tr');
                 row.innerHTML = `
-                    <span>${price}</span>
-                    <span>${amount}</span>
-                    <span class="order-book-total">${total}</span>
+                    <td class="buy-order">${price}</td>
+                    <td>${amount}</td>
+                    <td>${total}</td>
                 `;
                 buyOrders.appendChild(row);
             }
+            document.getElementById('spread').textContent = 'Spread: 0.00001 (1.00%)'; // Dummy spread
         }
         function loadRecentTrades(symbol) {
             const wsTrades = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@trade`);
@@ -3638,29 +3671,28 @@
                                             // Messages
                                             h('div', { className: "flex-1 p-6 overflow-y-auto custom-scroll" },
                                                 h('div', { className: "space-y-4" },
-                                                    currentRoomMessages.length > 0 ? currentRoomMessages.map((message, index) => (
+                                                    currentRoomMessages.length > 0 ? currentRoomMessages.map(msg => (
                                                         h('div',
                                                             {
-                                                                key: message.id,
-                                                                className: "flex gap-4 message-animate",
-                                                                style: { animationDelay: `${index * 80}ms` }
+                                                                key: msg.id,
+                                                                className: "flex gap-4 message-animate"
                                                             },
                                                             h('div', { className: "flex flex-col items-center gap-1" },
                                                                 h('div', {
-                                                                    className: `w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${message.isUser ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'bg-gradient-to-br from-amber-500 to-orange-600'}`
-                                                                }, getAvatarLetter(message.sender)),
-                                                                h('span', { className: "text-xs text-gray-400 max-w-[60px] truncate" }, message.sender)
+                                                                    className: `w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${msg.isUser ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'bg-gradient-to-br from-amber-500 to-orange-600'}`
+                                                                }, getAvatarLetter(msg.sender)),
+                                                                h('span', { className: "text-xs text-gray-400 max-w-[60px] truncate" }, msg.sender)
                                                             ),
                                                             h('div', { className: "flex-1" },
                                                                 h('div', { className: "flex justify-between items-center mb-2" },
-                                                                    h('span', { className: "font-bold text-amber-500" }, message.sender),
+                                                                    h('span', { className: "font-bold text-amber-500" }, msg.sender),
                                                                     h('span', { className: "text-xs text-gray-500 flex items-center gap-1" },
                                                                         h(ClockIcon, { size: 12 }),
-                                                                        message.timestamp
+                                                                        msg.timestamp
                                                                     )
                                                                 ),
                                                                 h('div', { className: "bg-white/5 backdrop-blur-sm rounded-2xl rounded-tl-sm p-4 max-w-[85%] border border-gray-700/50" },
-                                                                    h('p', { className: "text-white leading-relaxed whitespace-pre-wrap" }, message.content)
+                                                                    h('p', { className: "text-white leading-relaxed whitespace-pre-wrap" }, msg.content)
                                                                 )
                                                             )
                                                         )
